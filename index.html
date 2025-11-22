@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Protocolo de Aplicación del CPC - 40 Preguntas</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.97);
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+      border: 1px solid #ddd;
+    }
+    h1 { text-align: center; color: #1a2a6c; font-size: 2.3em; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #555; font-style: italic; font-size: 1.1em; margin-bottom: 30px; }
+    .card {
+      background: #f8f9fa;
+      padding: 28px;
+      border-radius: 16px;
+      margin: 25px 0;
+      border-left: 6px solid #1a2a6c;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    .question {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #1a2a6c;
+      margin-bottom: 22px;
+      line-height: 1.4;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 25px 0;
+    }
+    .option {
+      padding: 18px;
+      background: #e9ecef;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.05em;
+      border: 2px solid transparent;
+    }
+    .option:hover {
+      background: #dee2e6;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .option.correct { background: #d4edda; border-color: #28a745; }
+    .option.incorrect { background: #f8d7da; border-color: #dc3545; }
+    button {
+      padding: 14px 32px;
+      background: #fd7e14;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 12px 6px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #e63946;
+      transform: scale(1.05);
+    }
+    #cronometro {
+      text-align: center;
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #1a2a6c;
+      margin: 15px 0;
+      display: none;
+    }
+    .feedback, .revision {
+      margin-top: 25px;
+      padding: 22px;
+      background: #e8f5e8;
+      border-radius: 12px;
+      border-left: 6px solid #28a745;
+      font-size: 1.1em;
+      line-height: 1.7;
+      display: none;
+    }
+    .revision {
+      background: #f8f9fa;
+      border-left: 6px solid #1a2a6c;
+    }
+    .error { color: #dc3545; font-weight: bold; }
+    .correcto { color: #28a745; font-weight: bold; }
+    .articulo { font-style: italic; color: #1a2a6c; margin: 8px 0; }
+    .progreso {
+      width: 100%;
+      height: 10px;
+      background: #ddd;
+      border-radius: 5px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .progreso-bar {
+      height: 100%;
+      background: linear-gradient(to right, #28a745, #ffc107, #dc3545);
+      transition: width 0.3s;
+      width: 0%;
+    }
+    .flashcard {
+      margin: 35px 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+      cursor: default;
+      border: 1px solid #ddd;
+    }
+    .flashcard-header {
+      padding: 16px 24px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+    .flashcard-header.correct { background: #28a745; }
+    .flashcard-header.incorrect { background: #dc3545; }
+    .flashcard-content { padding: 0 24px 24px; display: none; background: #fff; }
+    .flashcard-content.show { display: block; }
+    .btn-toggle-all { display: block; margin: 25px auto 15px; background: #007bff; padding: 10px 20px; font-size: 1em; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-toggle-all:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Protocolo de Aplicación del CPC</h1>
+    <p class="subtitle">40 preguntas · Revisión Completa · Audio · Progreso</p>
+    <div id="inicio" style="text-align:center; margin:40px 0;">
+      <p><strong>Modo Examen</strong> — 40 preguntas aleatorias</p>
+      <button id="btnIniciar" onclick="iniciarExamen()">¡Iniciar Examen!</button>
+    </div>
+    <p id="cronometro">Tiempo: 00:00</p>
+    <div id="juego" class="card" style="display:none;">
+      <div id="progresoContainer"></div>
+      <div class="question" id="preguntaTexto"></div>
+      <div class="options" id="opciones"></div>
+    </div>
+    <div id="feedback" class="feedback"></div>
+    <div id="revision" class="revision"></div>
+  </div>
+
+  <script>
+    // ====== 40 PREGUNTAS DEL PROTOCOLO DE APLICACIÓN DEL CÓDIGO PROCESAL CIVIL ======
+    const preguntas = [
+      { pregunta: "¿Cuál es el objeto del Protocolo de Aplicación del Código Procesal Civil?", opciones: ["Regular únicamente las audiencias orales en materia civil.", "Establecer procedimientos y herramientas uniformes para la correcta aplicación del Código Procesal Civil, garantizando que la justicia civil sea pronta, oportuna, transparente y sin dilaciones.", "Sustituir el Código Procesal Civil vigente por uno nuevo.", "Definir la estructura jerárquica de los juzgados civiles."], correcta: 1, explicacion: "El artículo 1 expresa que el objeto del Protocolo es 'establecer procedimientos y herramientas uniformes … para que la prestación del servicio de la administración de justicia en materia civil sea pronta, oportuna, transparente, sin dilaciones, y el derecho de acceso a la justicia esté garantizado'.", articulo: "Art. 1 Protocolo" },
+      { pregunta: "¿Quiénes están obligados al cumplimiento del Protocolo según su ámbito de aplicación?", opciones: ["Sólo los Jueces y Juzgados Civiles.", "El Consejo de la Magistratura, los Tribunales Departamentales de Justicia, juezas y jueces en materia civil y comercial, conciliadoras y conciliadores, servidores públicos de apoyo judicial.", "Las partes en los procesos civiles únicamente.", "Sólo las conciliadoras y conciliadores."], correcta: 1, explicacion: "El artículo 2 indica que el Protocolo es de cumplimiento obligatorio para los diferentes órganos señalados (Consejo de la Magistratura, Tribunales Departamentales, Jueces, conciliadores, etc.).", articulo: "Art. 2 Protocolo" },
+      { pregunta: "¿Cuál de los siguientes es uno de los principios rectores del Protocolo?", opciones: ["Publicidad, Inmediatez, Igualdad procesal.", "Secreto absoluto del proceso.", "Exclusividad del proceso escrito.", "Prioridad del litigio informal sobre el judicial."], correcta: 0, explicacion: "En el artículo 4 se listan varios principios rectores como oralidad, legalidad, dirección, saneamiento, inmediatez, concentración, publicidad, celeridad, interculturalidad, transparencia, igualdad procesal, continuidad, verdad material.", articulo: "Art. 4 Protocolo" },
+      { pregunta: "¿Qué vía se considera no jurisdiccional para la solución de conflictos según el Protocolo?", opciones: ["La demanda contenciosa ante el Juzgado.", "La apelación ante el Tribunal Departamental.", "La conciliación previa a cargo de conciliadoras o conciliadores.", "El proceso de ejecución de sentencia."], correcta: 2, explicacion: "El artículo 5 señala que la conciliación previa, a cargo de conciliadores, constituye la vía no jurisdiccional para la solución de conflictos.", articulo: "Art. 5 Protocolo" },
+      { pregunta: "¿Cuál es una de las modalidades para iniciar la conciliación previa según el Protocolo?", opciones: ["Exclusivamente a requerimiento de ambas partes.", "A requerimiento de una o ambas partes, o por derivación de la autoridad judicial de oficio o a solicitud de parte.", "Sólo cuando la demanda ya ha sido admitida.", "Solo en procesos de usucapión."], correcta: 1, explicacion: "El artículo 12 indica que existen dos modalidades: (1) a requerimiento de una o ambas partes; (2) por derivación de la autoridad judicial de oficio o a solicitud de parte.", articulo: "Art. 12 Protocolo" },
+      { pregunta: "¿Cuál es el plazo máximo sin audiencia conciliatoria, que obliga al archivo de obrados según el Protocolo?", opciones: ["1 mes.", "3 meses.", "2 meses computables desde la fecha del último señalamiento de audiencia conciliatoria.", "6 meses."], correcta: 2, explicacion: "El artículo 21 establece que si transcurrido dos meses computables desde la fecha del último señalamiento de audiencia conciliatoria no se hubiere celebrado, la conciliadora o conciliador procederá al archivo de obrados.", articulo: "Art. 21 Protocolo" },
+      { pregunta: "En la fase escrita del proceso judicial, ¿qué se indica sobre el sorteo único de las causas?", opciones: ["Que cada demanda nueva se sortea por separado sin excepciones.", "Que si una causa judicial se sorteó y asignó a determinada autoridad, las posteriores formalizaciones de demanda o nuevas demandas serán asignadas al mismo Juzgado, cuando exista conexidad de partes, objeto y causa.", "Que no existe sorteo.", "Que el sorteo es potestativo."], correcta: 1, explicacion: "El artículo 24. I establece la regla del sorteo único: si ya hay una causa asignada, las posteriores demandas conexas se conocerán por el mismo Juzgado.", articulo: "Art. 24.I Protocolo" },
+      { pregunta: "¿Qué debe contener el acta de conciliación según el Protocolo?", opciones: ["Sólo el nombre de las partes y el resultado.", "Lugar, fecha, hora de la audiencia; identificación de conciliadora o conciliador; identificación de personas asistentes; antecedentes y objeto de la conciliación; puntos acordados; obligaciones; firma.", "Una transcripción completa de la audiencia.", "Solo los puntos no resueltos."], correcta: 1, explicacion: "El artículo 18 detalla los requisitos que debe contener el acta de conciliación: lugar, fecha, hora; quienes asisten; los antecedentes; los acuerdos; obligaciones; firma, etc.", articulo: "Art. 18 Protocolo" },
+      { pregunta: "Según el Protocolo, ¿qué sucede si el acta de conciliación es aprobada por la autoridad judicial?", opciones: ["No tiene efectos jurídicos.", "Se convierte en documento público para efectos de ejercicio de derechos y podrá inscribirse en el registro que corresponda.", "Se implica que no puede ejecutarse.", "Debe volver a la conciliadora para nueva firma."], correcta: 1, explicacion: "El artículo 19 II y III indican que al aprobarse el acta de conciliación, la autoridad judicial ordenará entrega de testimonio o fotocopia legalizada y se genera el efecto de documento público para los derechos definidos, incluso para inscripción en registros.", articulo: "Art. 19.II-III Protocolo" },
+      { pregunta: "¿Cuál de los siguientes no es un asunto no conciliable según el Protocolo?", opciones: ["Procesos en los que fueren parte incapaces de obrar.", "Asuntos de orden público o en que el Estado sea parte.", "Pretensiones patrimoniales susceptibles de disposición por su titular.", "Procesos concursales donde se definen derechos u obligaciones de preferente orden."], correcta: 2, explicacion: "El artículo 7 I enumera los asuntos excluidos de la conciliación. Las pretensiones patrimoniales susceptibles de disposición por su titular sí son conciliables (Art. 6).", articulo: "Arts. 6-7 Protocolo" },
+      { pregunta: "¿Cuál artículo señala el marco normativo en que se sustenta el Protocolo?", opciones: ["Artículo 1 — Objeto", "Artículo 2 — Ámbito de aplicación", "Artículo 3 — Marco normativo", "Artículo 4 — Principios rectores"], correcta: 2, explicacion: "El artículo 3 se titula 'MARCO NORMATIVO' y enumera la Constitución, la Ley del Órgano Judicial, el Código Procesal Civil, entre otros.", articulo: "Art. 3 Protocolo" },
+      { pregunta: "Según el Protocolo, uno de sus principios rectores es:", opciones: ["Exclusión del principio de igualdad procesal", "Oralidad", "Inactividad del juez", "Procesos exclusivamente escritos"], correcta: 1, explicacion: "En los principios rectores se incluye la oralidad como uno de los principios del proceso civil.", articulo: "Art. 4 Protocolo" },
+      { pregunta: "En el procedimiento de conciliación previa, el sorteo de la causa se realiza mediante el sistema:", opciones: ["Manual únicamente sin excepciones", "Sistema computarizado de registro judicial (SIREJ) cuando está instalado", "A decisión del juez", "No se realiza sorteo alguno"], correcta: 1, explicacion: "En las disposiciones para conciliación previa se menciona que el sorteo se realizará mediante el SIREJ si está instalado; donde no lo esté, será manual.", articulo: "Disposiciones Conciliación Previa" },
+      { pregunta: "Según el Protocolo, ¿qué debe hacer la autoridad judicial cuando aprueba el acta de conciliación?", opciones: ["La desecha automáticamente", "No produce efectos jurídicos", "Ordena la entrega de testimonio o copia legalizada y le confiere valor de documento público", "Sólo la archiva sin más trámite"], correcta: 2, explicacion: "Una vez aprobada el acta, la autoridad ordenará la entrega de testimonio o fotocopia legalizada y le dará valor de documento público para efectos del ejercicio de derechos.", articulo: "Art. 19 Protocolo" },
+      { pregunta: "¿Cuál de las siguientes fases no corresponde al Título III (“Proceso Judicial”) del Protocolo?", opciones: ["Fase escrita", "Audiencia preliminar", "Ejecución de sentencia", "Mediación extrajudicial"], correcta: 3, explicacion: "El Título III consta de fase escrita, audiencia preliminar, audiencia complementaria, acta de audiencia, ejecución de sentencia. La mediación extrajudual no figura.", articulo: "Título III Protocolo" },
+      { pregunta: "¿Qué principio señala el Protocolo respecto del tiempo procesal?", opciones: ["Que puede haber dilaciones indefinidas", "Inmediatez y concentración", "Prioridad de documentos escritos sobre audiencia", "Exclusión de la publicidad del proceso"], correcta: 1, explicacion: "Entre los principios rectores se encuentran la inmediatez (rapidez) y concentración (reunir actos procesales para evitar dilaciones).", articulo: "Art. 4 Protocolo" },
+      { pregunta: "En la fase de conciliación, ¿qué sucede si transcurren dos meses desde el último señalamiento de audiencia sin celebrarse?", opciones: ["Se extiende el plazo indefinidamente", "Se archiva los obrados de conciliación", "Se pasa de oficio a fase judicial sin conciliación", "La conciliadora despide a las partes"], correcta: 1, explicacion: "El artículo correspondiente establece que si luego de dos meses computables desde la fecha del último señalamiento de audiencia conciliatoria no se celebra, la conciliadora o conciliador procede al archivo de obrados.", articulo: "Art. 21 Protocolo" },
+      { pregunta: "¿Cuál es el efecto para posteriores demandas conexas cuando ya existe una causa asignada al Juzgado, según el Protocolo?", opciones: ["Siempre se sortea nuevamente", "Se asignan al mismo Juzgado si existe conexidad de partes, objeto y causa", "Siempre se envían a otra jurisdicción", "Se devuelven sin ser admitidas"], correcta: 1, explicacion: "El Protocolo prevé que si una causa ya ha sido sorteada al Juzgado, las demandas nuevas conexas con partes, objeto o causa serán asignadas al mismo Juzgado.", articulo: "Art. 24 Protocolo" },
+      { pregunta: "¿Qué debe contener obligatoriamente el acta de audiencia en la fase judicial del Protocolo?", opciones: ["Sólo el nombre del juez", "Lugar, fecha, hora, asistentes, desarrollo de la audiencia, firma del juez y de las partes", "Exclusivamente los acuerdos alcanzados", "Un resumen sin firmas necesarias"], correcta: 1, explicacion: "El acta debe contener los datos de lugar, fecha, hora, la identificación de los asistentes, el desarrollo de la audiencia y la firma de las partes o su constancia.", articulo: "Sección Acta de Audiencia" },
+      { pregunta: "Según el Protocolo, entre los asuntos excluidos de conciliación previa están:", opciones: ["Las pretensiones patrimoniales susceptibles de disposición por el titular", "Los procesos en que el Estado sea parte", "Los conflictos entre particulares sobre bienes muebles y valores", "Las demandas simplemente de carácter personal entre particulares"], correcta: 1, explicacion: "El Protocolo excluye de la conciliación previa los procesos en que el Estado sea parte, entre otros.", articulo: "Art. 7 Protocolo" },
+      { pregunta: "Según el Protocolo, la conciliación previa tiene como finalidad principal:", opciones: ["Evitar que las partes presenten pruebas", "Promover la solución de los conflictos sin necesidad de acudir al proceso judicial", "Reducir la intervención de las autoridades judiciales", "Declarar la improcedencia de las pretensiones de las partes"], correcta: 1, explicacion: "La conciliación previa busca resolver conflictos antes de acudir a la vía jurisdiccional, promoviendo acuerdos voluntarios.", articulo: "Art. 5 Protocolo" },
+      { pregunta: "¿Quién dirige la audiencia conciliatoria según el Protocolo?", opciones: ["El juez de materia civil", "Un secretario", "La conciliadora o el conciliador", "El Tribunal Departamental"], correcta: 2, explicacion: "El Protocolo señala que la audiencia está bajo dirección exclusiva de la conciliadora o el conciliador.", articulo: "Disposiciones Conciliación" },
+      { pregunta: "Si una parte no comparece a la audiencia conciliatoria sin causa justificada, la conciliadora puede:", opciones: ["Sancionarla económicamente", "Continuar sin su presencia", "Reprogramar una sola vez la audiencia", "Declarar la imposibilidad de conciliación"], correcta: 3, explicacion: "La inasistencia injustificada habilita a declarar que no es posible conciliar y cerrar la actuación.", articulo: "Reglas de Conciliación" },
+      { pregunta: "Según el Protocolo, ¿qué debe acreditar el solicitante para iniciar conciliación previa?", opciones: ["Sol | Solamente su identidad", "Identidad y documentación mínima que respalde la pretensión", "Identidad y domicilio del juez", "Identidad de la conciliadora asignada"], correcta: 1, explicacion: "Se exige identificación y respaldo básico del conflicto para registrar la solicitud.", articulo: "Requisitos de Solicitud" },
+      { pregunta: "El acta de imposibilidad de conciliación debe contener:", opciones: ["Sólo el nombre de las partes", "Fecha y hora, identificación de partes, causa de la imposibilidad, firma", "Únicamente la firma de la conciliadora", "Un resumen verbal sin datos formales"], correcta: 1, explicacion: "Igual que las actas de conciliación, debe consignar datos mínimos que acrediten el intento fallido.", articulo: "Art. Acta Imposibilidad" },
+      { pregunta: "¿Qué efecto produce la falta de firmas en el acta de conciliación cuando una de las partes se niega a firmar?", opciones: ["El acta carece de validez", "No se puede remitir a la autoridad judicial", "El acta sigue siendo válida si se deja constancia de la negativa", "Se debe repetir la audiencia"], correcta: 2, explicacion: "Basta con que se deje constancia de la negativa; no afecta la validez del acta.", articulo: "Reglas Acta Conciliación" },
+      { pregunta: "¿Cuál es el objetivo de la audiencia preliminar en el proceso judicial según el Protocolo?", opciones: ["Ejecutar sentencias", "Recibir testigos", "Saneamiento procesal y fijación de puntos de hecho a probar", "Presentar conclusiones orales"], correcta: 2, explicacion: "La audiencia preliminar busca ordenar el proceso, sanear vicios y definir los puntos controvertidos.", articulo: "Audiencia Preliminar" },
+      { pregunta: "En la audiencia preliminar, la autoridad judicial puede:", opciones: ["Admitir o rechazar pruebas", "Emitir sentencia definitiva", "Resolver recursos de apelación", "Ordenar clausura del proceso de inmediato"], correcta: 0, explicacion: "El juez debe decidir sobre la admisibilidad de las pruebas y preparar el juicio.", articulo: "Funciones Audiencia Preliminar" },
+      { pregunta: "En el Protocolo, la audiencia complementaria tiene como función principal:", opciones: ["Resolver incidentes previos", "Ejecutar la sentencia", "Recibir la prueba oral (testigos, peritos, declaraciones)", "Registrar documentos"], correcta: 2, explicacion: "Esta audiencia corresponde a la fase probatoria oral.", articulo: "Audiencia Complementaria" },
+      { pregunta: "Según el Protocolo, la actuación del juez durante las audiencias debe regirse principalmente por el principio de:", opciones: ["Delegación", "Inmediatez", "Secreto procesal", "Escrituración"], correcta: 1, explicacion: "El principio de inmediatez exige la presencia directa del juez para garantizar transparencia y contradicción.", articulo: "Art. 4 Protocolo" },
+      { pregunta: "¿Cuál es la regla sobre la grabación de audiencias según el Protocolo?", opciones: ["No se permite ningún tipo de grabación", "Solo puede grabar la autoridad judicial", "Las audiencias deben ser registradas por medios tecnológicos cuando existan", "Solo las partes pueden grabar sin autorización"], correcta: 2, explicacion: "El Protocolo establece que debe registrarse por medios tecnológicos para asegurar transparencia y control procesal.", articulo: "Registro de Audiencias" },
+      { pregunta: "¿Qué ocurre si durante la audiencia preliminar las partes llegan a un acuerdo total?", opciones: ["El proceso continúa de todas formas", "El juez dicta sentencia inmediata rechazando todo", "El juez homologa el acuerdo y concluye el proceso", "Se suspende la audiencia hasta nueva fecha"], correcta: 2, explicacion: "El acuerdo extingue la controversia, por lo que se homologa y se da por concluido el proceso.", articulo: "Acuerdo en Audiencia Preliminar" },
+      { pregunta: "¿Qué debe hacer el juez si detecta un vicio que afecta la validez del proceso en la audiencia preliminar?", opciones: ["Ignorarlo hasta sentencia", "Saneamiento inmediato del proceso", "Suspender el proceso sin resolver", "Enviar el caso a otra autoridad"], correcta: 1, explicacion: "El saneamiento es objetivo central de la audiencia preliminar para evitar nulidades futuras.", articulo: "Saneamiento Procesal" },
+      { pregunta: "¿Qué recurso procede contra las decisiones tomadas en audiencia preliminar?", opciones: ["Ninguno, todas son irrevisables", "Reposición con alternativa de apelación en algunos casos", "Solo apelación directa", "Recurso de casación"], correcta: 1, explicacion: "Algunas determinaciones se impugnan mediante reposición y otras con alternativa de apelación según su naturaleza procesal.", articulo: "Recursos Audiencia Preliminar" },
+      { pregunta: "En la audiencia complementaria, si una parte no presenta a su testigo sin justificación:", opciones: ["El juez lo declara falso testimonio", "Se suspende la audiencia automáticamente", "El juez tiene facultad para tener por desistida la prueba", "Debe citarse nuevamente de oficio"], correcta: 2, explicacion: "La falta injustificada de producción de prueba puede generar su desistimiento para garantizar celeridad.", articulo: "Prueba en Audiencia Complementaria" },
+      { pregunta: "¿Qué documento se elabora al finalizar cada audiencia judicial?", opciones: ["Un simple registro verbal", "Una copia manuscrita sin firmas", "El acta de audiencia", "Un informe externo del secretario"], correcta: 2, explicacion: "El acta documenta todo lo actuado, lo que garantiza control y seguridad jurídica.", articulo: "Acta de Audiencia" },
+      { pregunta: "¿Qué característica debe tener el acta de audiencia para ser válida?", opciones: ["Solo contener la firma del juez", "Estar firmada por los intervinientes o con constancia de su imposibilidad", "No necesita firmas si está grabada", "Puede omitirse si no se discutieron pruebas"], correcta: 1, explicacion: "La firma o la constancia de negativa garantiza autenticidad y cumplimiento formal.", articulo: "Requisitos Acta de Audiencia" },
+      { pregunta: "Sobre la ejecución de sentencia, el Protocolo indica que el juez debe:", opciones: ["Esperar petición escrita de ambas partes", "Ejecutar de oficio lo resuelto", "Permitir que las partes ejecuten por su cuenta", "Delegar la ejecución en la conciliadora"], correcta: 1, explicacion: "La sentencia debe ejecutarse de oficio para garantizar cumplimiento efectivo e inmediato.", articulo: "Ejecución de Sentencia" },
+      { pregunta: "En ejecución de sentencia, si la parte obligada no cumple voluntariamente:", opciones: ["El proceso se archiva", "Se deja sin efecto la sentencia", "El juez puede ordenar medidas de coerción y cumplimiento forzoso", "Se inicia un nuevo proceso civil"], correcta: 2, explicacion: "El juez debe garantizar la eficacia de la sentencia mediante medidas coercitivas.", articulo: "Cumplimiento Forzoso" },
+      { pregunta: "El Protocolo dispone que la administración de justicia civil debe ser:", opciones: ["Lenta pero formal", "Prioritariamente escrita", "Transparente, pronta, oportuna y sin dilaciones", "Reservada para las partes exclusivamente"], correcta: 2, explicacion: "Este es el objetivo central del Protocolo: uniformar prácticas para garantizar una justicia ágil, transparente y efectiva.", articulo: "Art. 1 Protocolo" }
+    ];
+
+    // === EL RESTO DEL CÓDIGO JS ES EXACTAMENTE EL MISMO ===
+    let aciertos = 0;
+    let totalPreguntas = 0;
+    const totalPreguntasMax = 40;
+    let timer;
+    let segundos = 0;
+    let respuestasUsuario = [];
+    let preguntasMezcladas = [];
+    const preguntaTexto = document.getElementById('preguntaTexto');
+    const opcionesDiv = document.getElementById('opciones');
+    const feedback = document.getElementById('feedback');
+    const revision = document.getElementById('revision');
+    const juego = document.getElementById('juego');
+    const inicio = document.getElementById('inicio');
+    const cronometro = document.getElementById('cronometro');
+    const progresoContainer = document.getElementById('progresoContainer');
+
+    function iniciarExamen() {
+      aciertos = 0; totalPreguntas = 0; segundos = 0; respuestasUsuario = [];
+      inicio.style.display = 'none'; juego.style.display = 'block'; cronometro.style.display = 'block';
+      preguntasMezcladas = [...preguntas].sort(() => Math.random() - 0.5);
+      cargarPregunta();
+      timer = setInterval(actualizarCronometro, 1000);
+    }
+
+    function actualizarCronometro() {
+      segundos++;
+      const min = String(Math.floor(segundos / 60)).padStart(2, '0');
+      const seg = String(segundos % 60).padStart(2, '0');
+      cronometro.textContent = `Tiempo: ${min}:${seg}`;
+    }
+
+    function cargarPregunta() {
+      if (totalPreguntas >= totalPreguntasMax) {
+        clearInterval(timer);
+        mostrarResultadoFinal();
+        return;
+      }
+      progresoContainer.innerHTML = `
+        <div class="progreso">
+          <div class="progreso-bar" style="width: ${((totalPreguntas + 1) / totalPreguntasMax) * 100}%"></div>
+        </div>
+        <p style="text-align:center; margin:5px 0; font-weight:bold;">Pregunta ${totalPreguntas + 1} de 40</p>
+      `;
+      const preguntaActual = preguntasMezcladas[totalPreguntas];
+      preguntaTexto.innerHTML = `<strong>${totalPreguntas + 1}.</strong> ${preguntaActual.pregunta}`;
+      opcionesDiv.innerHTML = '';
+      preguntaActual.opciones.forEach((op, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'option';
+        btn.innerHTML = `<strong>${String.fromCharCode(97 + i)})</strong> ${op}`;
+        btn.onclick = () => seleccionarRespuesta(i, btn, preguntaActual);
+        opcionesDiv.appendChild(btn);
+      });
+    }
+
+    function seleccionarRespuesta(index, elemento, preguntaActual) {
+      const idxOriginal = preguntas.indexOf(preguntaActual);
+      respuestasUsuario.push({ usuario: index, correcta: preguntaActual.correcta, preguntaIndex: idxOriginal });
+      if (index === preguntaActual.correcta) aciertos++;
+      elemento.classList.add(index === preguntaActual.correcta ? 'correct' : 'incorrect');
+      document.querySelectorAll('.option').forEach(b => b.style.pointerEvents = 'none');
+      totalPreguntas++;
+      setTimeout(cargarPregunta, 1500);
+    }
+
+    function mostrarResultadoFinal() {
+      juego.style.display = 'none';
+      const nota = (aciertos / 40 * 100).toFixed(1);
+      const minutos = Math.floor(segundos / 60);
+      const segRestantes = segundos % 60;
+      feedback.innerHTML = `
+        <h2>¡Examen Terminado!</h2>
+        <p><strong>Aciertos:</strong> <span class="correcto">${aciertos}/40</span></p>
+        <p><strong>Nota:</strong> <span class="correcto">${nota}/100</span></p>
+        <p><strong>Tiempo total:</strong> ${minutos} min ${segRestantes} seg</p>
+        <button onclick="mostrarRevision()" style="background:#1a2a6c;">Ver Revisión Completa</button>
+        <button onclick="location.reload()" style="background:#28a745;">Volver a Intentar</button>
+      `;
+      feedback.style.display = 'block';
+    }
+
+    function mostrarRevision() {
+      feedback.style.display = 'none';
+      let html = `<h2>Revisión Completa del Examen</h2>
+                  <p>Haz clic en cada pregunta para ver la explicación. Usa el botón para expandir todo.</p>
+                  <button class="btn-toggle-all" onclick="toggleAll()">Mostrar/Ocultar Todas</button><hr>`;
+      respuestasUsuario.forEach((resp, idx) => {
+        const pregunta = preguntas[resp.preguntaIndex];
+        const letraUsuario = String.fromCharCode(97 + resp.usuario);
+        const letraCorrecta = String.fromCharCode(97 + pregunta.correcta);
+        const esCorrecta = resp.usuario === pregunta.correcta;
+        const explicacionSegura = pregunta.explicacion.replace(/'/g, "\\'");
+        html += `
+          <div class="flashcard" onclick="this.querySelector('.flashcard-content').classList.toggle('show')">
+            <div class="flashcard-header ${esCorrecta ? 'correct' : 'incorrect'}">
+              ${idx + 1}. ${esCorrecta ? 'Correcta' : 'Incorrecta'} — Tu respuesta: ${letraUsuario})
+            </div>
+            <div class="flashcard-content">
+              <p><strong>Respuesta correcta:</strong> <span class="correcto">${letraCorrecta}) ${pregunta.opciones[pregunta.correcta]}</span></p>
+              <p><em>${pregunta.articulo}</em></p>
+              <p><strong>Explicación:</strong> ${pregunta.explicacion}</p>
+              <button class="audio-btn" onclick="event.stopPropagation(); hablar('${explicacionSegura}')">Escuchar Explicación</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `<button onclick="location.reload()" style="background:#28a745; margin-top:20px;">Volver a Intentar</button>`;
+      revision.innerHTML = html;
+      revision.style.display = 'block';
+    }
+
+    function toggleAll() {
+      document.querySelectorAll('.flashcard-content').forEach(c => c.classList.toggle('show'));
+    }
+
+    function hablar(texto) {
+      const utterance = new SpeechSynthesisUtterance(texto);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+  </script>
+</body>
+</html>
